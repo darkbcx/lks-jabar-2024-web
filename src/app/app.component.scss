@@ -1,0 +1,11 @@
+.msgme {
+  @apply self-end;
+  @apply bg-lime-100;
+  @apply border-lime-600;
+}
+
+.msgother {
+  @apply self-start;
+  @apply bg-slate-100;
+  @apply border-slate-600;
+}
