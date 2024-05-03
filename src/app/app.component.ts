@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,6 +12,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { WebsocketService } from './services/websocket.service';
+import { Subscription } from 'rxjs';
 
 type ChatMessage = {
   timestamp: number;
@@ -35,10 +37,14 @@ type ChatMessage = {
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
+  websocketService = inject(WebsocketService);
   myForm!: FormGroup;
   fb = inject(FormBuilder);
   wsUrl = '';
+  messageFromServer = '';
+  wsSubscription: Subscription | undefined;
+  status = '';
   messages: ChatMessage[] = [
     {
       timestamp: 1,
@@ -60,11 +66,51 @@ export class AppComponent {
     });
   }
 
+  ngOnDestroy(): void {
+    if (this.wsSubscription && !this.wsSubscription.closed)
+      this.wsSubscription.unsubscribe();
+  }
+
   formSubmit() {
     if (this.myForm.valid) {
       console.log(this.myForm.value);
     } else {
       console.log('INVALID');
     }
+  }
+
+  connect() {
+    console.log('URL : ', this.wsUrl);
+    this.connecting = true;
+    this.wsSubscription = this.websocketService
+      .createObservableSocket(this.wsUrl)
+      .subscribe({
+        next: this.wsDataHandler,
+        error: this.wsErrorHandler,
+        complete: this.wsCompleteHandler,
+      });
+  }
+
+  disconnnect() {
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
+      this.connected = false;
+      this.wsUrl = '';
+    }
+  }
+
+  private wsDataHandler(data: any) {
+    this.connecting = false;
+    console.log('WS DATA : ', data);
+  }
+
+  private wsErrorHandler(error: any) {
+    this.connecting = false;
+    console.log('WS ERROR : ', error);
+  }
+
+  private wsCompleteHandler() {
+    this.connecting = false;
+    console.log('WS COMPLETE');
   }
 }

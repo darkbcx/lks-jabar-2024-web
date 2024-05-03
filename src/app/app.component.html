@@ -18,10 +18,16 @@
       mat-flat-button
       color="primary"
       [disabled]="connecting || connected"
+      (click)="connect()"
     >
       Connect
     </button>
-    <button mat-flat-button color="warn" [disabled]="connecting || !connected">
+    <button
+      mat-flat-button
+      color="warn"
+      [disabled]="connecting || !connected"
+      (click)="disconnnect()"
+    >
       Disconnect
     </button>
   </div>
