@@ -24,7 +24,8 @@ export class WebsocketService {
 
   sendMessage(message: string): string {
     if (this.ws.readyState === this.socketIsOpen) {
-      this.ws.send(message);
+      const objMsg = { action: 'sendmessage', message };
+      this.ws.send(JSON.stringify(objMsg));
       return `Sent to server ${message}`;
     } else {
       return 'Message was not sent - the socket is closed';

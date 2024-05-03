@@ -45,20 +45,8 @@ export class AppComponent implements OnDestroy {
   messageFromServer = '';
   wsSubscription: Subscription | undefined;
   status = '';
-  messages: ChatMessage[] = [
-    {
-      timestamp: 1,
-      message: 'ME',
-      from: 'me',
-    },
-    {
-      timestamp: 2,
-      message: 'OTHER',
-      from: 'other',
-    },
-  ];
+  messages: ChatMessage[] = [];
   connected = false;
-  connecting = false;
 
   constructor() {
     this.myForm = this.fb.group({
@@ -74,21 +62,28 @@ export class AppComponent implements OnDestroy {
   formSubmit() {
     if (this.myForm.valid) {
       console.log(this.myForm.value);
+      this.websocketService.sendMessage(this.myForm.value.message);
+      this.messages.push({
+        timestamp: new Date().getTime(),
+        message: this.myForm.value.message,
+        from: 'me',
+      });
     } else {
       console.log('INVALID');
     }
   }
 
   connect() {
-    console.log('URL : ', this.wsUrl);
-    this.connecting = true;
-    this.wsSubscription = this.websocketService
-      .createObservableSocket(this.wsUrl)
-      .subscribe({
-        next: this.wsDataHandler,
-        error: this.wsErrorHandler,
-        complete: this.wsCompleteHandler,
-      });
+    if (this.wsUrl) {
+      this.connected = true;
+      this.wsSubscription = this.websocketService
+        .createObservableSocket(this.wsUrl)
+        .subscribe({
+          next: (data) => this.wsDataHandler(data),
+          error: (err) => this.wsErrorHandler(err),
+          complete: () => this.wsCompleteHandler(),
+        });
+    }
   }
 
   disconnnect() {
@@ -100,17 +95,18 @@ export class AppComponent implements OnDestroy {
   }
 
   private wsDataHandler(data: any) {
-    this.connecting = false;
-    console.log('WS DATA : ', data);
+    this.messages.push({
+      timestamp: new Date().getTime(),
+      message: data,
+      from: 'other',
+    });
   }
 
   private wsErrorHandler(error: any) {
-    this.connecting = false;
     console.log('WS ERROR : ', error);
   }
 
   private wsCompleteHandler() {
-    this.connecting = false;
     console.log('WS COMPLETE');
   }
 }
