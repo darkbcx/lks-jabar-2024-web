@@ -65,9 +65,10 @@ export class AppComponent implements OnDestroy {
       this.websocketService.sendMessage(this.myForm.value.message);
       this.messages.push({
         timestamp: new Date().getTime(),
-        message: this.myForm.value.message,
+        message: this.myForm.value.message + '',
         from: 'me',
       });
+      this.myForm.patchValue({ message: '' });
     } else {
       console.log('INVALID');
     }
@@ -91,6 +92,7 @@ export class AppComponent implements OnDestroy {
       this.wsSubscription.unsubscribe();
       this.connected = false;
       this.wsUrl = '';
+      this.messages = [];
     }
   }
 
